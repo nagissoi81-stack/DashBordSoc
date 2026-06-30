@@ -29,13 +29,12 @@
 - **JavaScript** — التفاعلية والتحديث اللحظي للبيانات
 - **GitHub Pages** — الاستضافة والنشر
 
-<img width="932" height="427" alt="SOC2" src="https://github.com/user-attachments/assets/20904cd4-6a07-4e23-9bed-b59ee3e4af9c" />
-<img width="933" height="412" alt="SOC1" src="https://github.com/user-attachments/assets/403e8a0e-c5a2-42d9-8240-c1b09f02f293" />
+
 
 ## 👤 المطور
 
 **م. ناجي الشيخ (Eng. Nagi Alshaikh)**
-DevSecOps | Cybersecurity Technician | Software Engineer
+DevSecOps-Cybersecurity Technician-Software Engineer
 
 ## 📄 الترخيص
 
