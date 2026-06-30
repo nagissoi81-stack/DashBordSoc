@@ -22,6 +22,8 @@
 - **المستخدمون الأكثر تعرضاً للهجمات** — قائمة بأعلى 5 مستخدمين استهدافاً.
 - **خريطة مصدر الهجمات (GEO-IP)** — تحديد جغرافي لمصادر الهجمات.
 - **مصفوفة MITRE ATT&CK** — خريطة حرارية (Heatmap) للتكتيكات والتقنيات المستخدمة في الهجمات، مبنية على إطار عمل MITRE ATT&CK المعتمد عالمياً.
+<img width="935" height="424" alt="SOC1" src="https://github.com/user-attachments/assets/884c4983-67eb-4bc5-8e17-ce1c9d7c7a70" />
+<img width="932" height="431" alt="SOC2" src="https://github.com/user-attachments/assets/36d092d2-7ad2-4c9a-9a3c-6b8164b0ccd4" />
 
 ## 🛠️ التقنيات المستخدمة
 
