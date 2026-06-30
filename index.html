@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مركز العمليات الأمنية — SOC Command</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0e16;
+  --panel:#10151f;
+  --panel-raised:#141a26;
+  --line:#1f2735;
+  --cyan:#21e6d6;
+  --cyan-dim:rgba(33,230,214,0.12);
+  --red:#ff4365;
+  --red-dim:rgba(255,67,101,0.12);
+  --amber:#ffb84d;
+  --amber-dim:rgba(255,184,77,0.12);
+  --green:#3ee08a;
+  --text:#e7ecf3;
+  --muted:#7c8aa0;
+  --muted-dim:#4d5870;
+  --mono:'JetBrains Mono', monospace;
+  --display:'Cairo', sans-serif;
+  --body:'IBM Plex Sans Arabic', sans-serif;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{background:var(--bg); color:var(--text); font-family:var(--body); overflow-x:hidden;}
+body{
+  background-image:
+    radial-gradient(circle at 15% 0%, rgba(33,230,214,0.06), transparent 40%),
+    radial-gradient(circle at 90% 90%, rgba(255,67,101,0.05), transparent 45%);
+  min-height:100vh;
+  padding:22px;
+}
+/* scanline texture */
+body::before{
+  content:'';
+  position:fixed; inset:0;
+  background:repeating-linear-gradient(180deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 3px);
+  pointer-events:none;
+  z-index:999;
+}
+
+/* ===== HEADER ===== */
+header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 22px;
+  background:linear-gradient(180deg, var(--panel-raised), var(--panel));
+  border:1px solid var(--line);
+  border-radius:14px;
+  margin-bottom:18px;
+  position:relative;
+  overflow:hidden;
+}
+header::after{
+  content:'';
+  position:absolute; inset:0 0 auto 0; height:2px;
+  background:linear-gradient(90deg, transparent, var(--cyan), transparent);
+  opacity:0.6;
+}
+.brand{display:flex; align-items:center; gap:14px;}
+.brand-mark{
+  width:42px; height:42px; border-radius:10px;
+  background:linear-gradient(135deg, var(--cyan), #0fa89c);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--mono); font-weight:700; color:#04221f; font-size:18px;
+  box-shadow:0 0 22px rgba(33,230,214,0.35);
+}
+.brand-text h1{font-family:var(--display); font-weight:900; font-size:19px; letter-spacing:.2px;}
+.brand-text p{font-family:var(--mono); font-size:11px; color:var(--muted); letter-spacing:.5px; margin-top:2px;}
+.header-right{display:flex; align-items:center; gap:22px;}
+.org-status{display:flex; align-items:center; gap:9px; font-family:var(--mono); font-size:12px;}
+.status-dot{width:9px; height:9px; border-radius:50%; background:var(--amber); box-shadow:0 0 10px var(--amber); animation:pulse 1.8s infinite;}
+.status-dot.crit{background:var(--red); box-shadow:0 0 10px var(--red);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+.clock{font-family:var(--mono); font-size:13px; color:var(--cyan); letter-spacing:1px; min-width:160px; text-align:left; direction:ltr;}
+.designer-credit{font-family:var(--mono); font-size:10px; color:var(--muted-dim); text-align:left; direction:ltr; line-height:1.4;}
+
+/* ===== KPI STRIP ===== */
+.kpi-grid{
+  display:grid; grid-template-columns:repeat(6,1fr); gap:14px; margin-bottom:18px;
+}
+.kpi{
+  background:var(--panel); border:1px solid var(--line); border-radius:12px;
+  padding:16px 16px 14px; position:relative; overflow:hidden;
+}
+.kpi::before{content:''; position:absolute; right:0; top:0; bottom:0; width:3px;}
+.kpi.k-cyan::before{background:var(--cyan); box-shadow:0 0 8px var(--cyan);}
+.kpi.k-red::before{background:var(--red); box-shadow:0 0 8px var(--red);}
+.kpi.k-amber::before{background:var(--amber); box-shadow:0 0 8px var(--amber);}
+.kpi.k-green::before{background:var(--green); box-shadow:0 0 8px var(--green);}
+.kpi-label{font-size:11.5px; color:var(--muted); margin-bottom:10px; font-weight:500;}
+.kpi-value{font-family:var(--mono); font-size:30px; font-weight:700; line-height:1; direction:ltr; text-align:right;}
+.kpi-sub{font-family:var(--mono); font-size:10.5px; color:var(--muted-dim); margin-top:7px; direction:ltr; text-align:right;}
+.kpi.k-cyan .kpi-value{color:var(--cyan);}
+.kpi.k-red .kpi-value{color:var(--red);}
+.kpi.k-amber .kpi-value{color:var(--amber);}
+.kpi.k-green .kpi-value{color:var(--green);}
+.trend-up{color:var(--red);} .trend-down{color:var(--green);}
+
+/* ===== MAIN GRID ===== */
+.main-grid{display:grid; grid-template-columns:1.1fr 1fr 1fr; gap:16px; margin-bottom:16px;}
+.panel{
+  background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px;
+}
+.panel-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;}
+.panel-title{font-family:var(--display); font-weight:700; font-size:14.5px;}
+.panel-tag{font-family:var(--mono); font-size:9.5px; color:var(--muted-dim); border:1px solid var(--line); padding:2px 8px; border-radius:20px; direction:ltr;}
+
+/* attack types bars */
+.bar-row{display:flex; align-items:center; gap:10px; margin-bottom:13px;}
+.bar-label{width:96px; font-size:12px; color:var(--muted); flex-shrink:0;}
+.bar-track{flex:1; height:9px; background:var(--panel-raised); border-radius:6px; overflow:hidden; position:relative;}
+.bar-fill{height:100%; border-radius:6px;}
+.bar-val{font-family:var(--mono); font-size:11.5px; width:34px; text-align:left; direction:ltr; color:var(--text); flex-shrink:0;}
+
+/* top users */
+.user-row{display:flex; align-items:center; gap:11px; padding:9px 0; border-bottom:1px dashed var(--line);}
+.user-row:last-child{border-bottom:none;}
+.user-rank{font-family:var(--mono); font-size:11px; color:var(--muted-dim); width:18px;}
+.user-avatar{width:30px; height:30px; border-radius:8px; background:var(--panel-raised); display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:11px; color:var(--cyan); border:1px solid var(--line); flex-shrink:0;}
+.user-info{flex:1; min-width:0;}
+.user-name{font-size:12.5px; font-weight:500;}
+.user-dept{font-size:10.5px; color:var(--muted-dim); font-family:var(--mono); direction:ltr; text-align:right;}
+.user-count{font-family:var(--mono); font-size:13px; color:var(--red); font-weight:600;}
+
+/* radar map */
+.radar-wrap{display:flex; gap:18px; align-items:center;}
+.radar{
+  width:168px; height:168px; border-radius:50%; position:relative; flex-shrink:0;
+  background:
+    repeating-radial-gradient(circle, transparent 0, transparent 27px, var(--line) 28px),
+    radial-gradient(circle, rgba(33,230,214,0.04), transparent 70%);
+  border:1px solid var(--line);
+}
+.radar::before, .radar::after{content:''; position:absolute; background:var(--line);}
+.radar::before{left:0; right:0; top:50%; height:1px;}
+.radar::after{top:0; bottom:0; left:50%; width:1px;}
+.radar-sweep{
+  position:absolute; inset:0; border-radius:50%;
+  background:conic-gradient(from 0deg, rgba(33,230,214,0.35), transparent 35%);
+  animation:sweep 3.2s linear infinite;
+  mix-blend-mode:screen;
+}
+@keyframes sweep{from{transform:rotate(0deg);} to{transform:rotate(360deg);}}
+.radar-dot{position:absolute; width:7px; height:7px; border-radius:50%; background:var(--red); box-shadow:0 0 9px var(--red); animation:blip 2s infinite;}
+@keyframes blip{0%,100%{opacity:1; transform:scale(1);}50%{opacity:.4; transform:scale(.7);}}
+.geo-list{flex:1;}
+.geo-row{display:flex; align-items:center; justify-content:space-between; padding:6px 0; font-size:12px;}
+.geo-name{color:var(--text); display:flex; align-items:center; gap:8px;}
+.geo-dot{width:6px; height:6px; border-radius:50%; background:var(--red);}
+.geo-count{font-family:var(--mono); color:var(--muted); font-size:11.5px; direction:ltr;}
+
+/* ===== BOTTOM ROW: incidents + MTTR gauge ===== */
+.bottom-row{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;}
+.incident-track{display:flex; height:14px; border-radius:8px; overflow:hidden; margin:14px 0 10px;}
+.incident-seg{height:100%;}
+.incident-legend{display:flex; gap:22px;}
+.legend-item{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted);}
+.legend-dot{width:9px; height:9px; border-radius:3px;}
+.legend-num{font-family:var(--mono); color:var(--text); font-weight:600;}
+
+.gauge-wrap{display:flex; align-items:center; gap:24px;}
+.gauge{position:relative; width:140px; height:140px;}
+.gauge svg{transform:rotate(-90deg);}
+.gauge-text{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;}
+.gauge-num{font-family:var(--mono); font-size:24px; font-weight:700; color:var(--cyan); direction:ltr;}
+.gauge-label{font-size:9.5px; color:var(--muted-dim); margin-top:2px;}
+.gauge-info p{font-size:12.5px; color:var(--muted); line-height:1.9;}
+.gauge-info b{color:var(--text); font-family:var(--mono);}
+
+/* ===== MITRE MATRIX (signature) ===== */
+.mitre-panel{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:20px;}
+.mitre-grid{display:grid; grid-template-columns:repeat(7, 1fr); gap:10px; margin-top:16px;}
+.tactic-col{display:flex; flex-direction:column; gap:7px;}
+.tactic-head{
+  font-family:var(--mono); font-size:9.5px; color:var(--muted); text-align:center;
+  padding-bottom:8px; border-bottom:1px solid var(--line); margin-bottom:2px;
+  letter-spacing:.3px; min-height:28px; display:flex; align-items:center; justify-content:center;
+}
+.cell{
+  border-radius:6px; padding:8px 6px; font-size:10.5px; text-align:center; cursor:default;
+  border:1px solid transparent; color:#cfd6e3; transition:transform .15s ease;
+  position:relative;
+}
+.cell:hover{transform:translateY(-2px); z-index:5; border-color:var(--cyan);}
+.cell .cnt{display:block; font-family:var(--mono); font-size:9px; margin-top:3px; opacity:.85;}
+.heat-0{background:var(--panel-raised); color:var(--muted-dim);}
+.heat-1{background:rgba(33,230,214,0.10);}
+.heat-2{background:rgba(33,230,214,0.22);}
+.heat-3{background:rgba(255,184,77,0.28); color:#fff;}
+.heat-4{background:rgba(255,67,101,0.38); color:#fff; font-weight:600;}
+
+footer{text-align:center; padding:18px 0 4px; font-family:var(--mono); font-size:10.5px; color:var(--muted-dim); letter-spacing:.4px;}
+
+@media (max-width:1100px){
+  .kpi-grid{grid-template-columns:repeat(3,1fr);}
+  .main-grid{grid-template-columns:1fr;}
+  .bottom-row{grid-template-columns:1fr;}
+  .mitre-grid{grid-template-columns:repeat(4,1fr);}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">SOC</div>
+    <div class="brand-text">
+      <h1>مركز العمليات الأمنية</h1>
+      <p>SECURITY OPERATIONS COMMAND · LIVE FEED</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="org-status">
+      <span class="status-dot crit" id="orgDot"></span>
+      <span id="orgStatusText">حالة المؤسسة: تحت المراقبة المشددة</span>
+    </div>
+    <div class="clock" id="clock">--:--:--</div>
+    <div class="designer-credit">تصميم وتطوير<br><b style="color:var(--cyan)">م. ناجي الشيخ</b></div>
+  </div>
+</header>
+
+<!-- KPI STRIP -->
+<section class="kpi-grid">
+  <div class="kpi k-cyan">
+    <div class="kpi-label">عدد التنبيهات اليوم</div>
+    <div class="kpi-value" id="kpiAlerts">1,284</div>
+    <div class="kpi-sub trend-up">▲ 6.2% عن أمس</div>
+  </div>
+  <div class="kpi k-red">
+    <div class="kpi-label">التنبيهات الحرجة</div>
+    <div class="kpi-value" id="kpiCritical">37</div>
+    <div class="kpi-sub trend-up">▲ تتطلب تدخل فوري</div>
+  </div>
+  <div class="kpi k-amber">
+    <div class="kpi-label">الأجهزة المصابة</div>
+    <div class="kpi-value" id="kpiInfected">14</div>
+    <div class="kpi-sub">من أصل 612 جهاز</div>
+  </div>
+  <div class="kpi k-cyan">
+    <div class="kpi-label">متوسط زمن الاستجابة</div>
+    <div class="kpi-value">11.4<span style="font-size:14px;color:var(--muted)">m</span></div>
+    <div class="kpi-sub trend-down">▼ تحسّن 2.1 دقيقة</div>
+  </div>
+  <div class="kpi k-red">
+    <div class="kpi-label">الحوادث المفتوحة</div>
+    <div class="kpi-value">19</div>
+    <div class="kpi-sub">قيد المعالجة</div>
+  </div>
+  <div class="kpi k-green">
+    <div class="kpi-label">الحوادث المغلقة</div>
+    <div class="kpi-value">152</div>
+    <div class="kpi-sub">هذا الشهر</div>
+  </div>
+</section>
+
+<!-- MAIN GRID -->
+<section class="main-grid">
+
+  <!-- attack types -->
+  <div class="panel">
+    <div class="panel-head">
+      <span class="panel-title">الهجمات حسب النوع</span>
+      <span class="panel-tag">24H</span>
+    </div>
+    <div id="attackTypes"></div>
+  </div>
+
+  <!-- top targeted users -->
+  <div class="panel">
+    <div class="panel-head">
+      <span class="panel-title">المستخدمون الأكثر تعرضاً للهجمات</span>
+      <span class="panel-tag">TOP 5</span>
+    </div>
+    <div id="topUsers"></div>
+  </div>
+
+  <!-- attack source map -->
+  <div class="panel">
+    <div class="panel-head">
+      <span class="panel-title">خريطة مصدر الهجمات</span>
+      <span class="panel-tag">GEO-IP</span>
+    </div>
+    <div class="radar-wrap">
+      <div class="radar" id="radar">
+        <div class="radar-sweep"></div>
+      </div>
+      <div class="geo-list" id="geoList"></div>
+    </div>
+  </div>
+</section>
+
+<!-- BOTTOM ROW -->
+<section class="bottom-row">
+  <div class="panel">
+    <div class="panel-head">
+      <span class="panel-title">عدد الحوادث المغلقة والمفتوحة</span>
+      <span class="panel-tag">INCIDENTS</span>
+    </div>
+    <div class="incident-track">
+      <div class="incident-seg" style="width:79%; background:var(--green);"></div>
+      <div class="incident-seg" style="width:21%; background:var(--red);"></div>
+    </div>
+    <div class="incident-legend">
+      <div class="legend-item"><span class="legend-dot" style="background:var(--green)"></span> مغلقة — <span class="legend-num">152</span></div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--red)"></span> مفتوحة — <span class="legend-num">19</span></div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--cyan)"></span> إجمالي — <span class="legend-num">171</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <span class="panel-title">متوسط زمن الاستجابة (MTTR)</span>
+      <span class="panel-tag">SLA TARGET 15m</span>
+    </div>
+    <div class="gauge-wrap">
+      <div class="gauge">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle cx="70" cy="70" r="60" fill="none" stroke="#1f2735" stroke-width="10"/>
+          <circle cx="70" cy="70" r="60" fill="none" stroke="#21e6d6" stroke-width="10"
+            stroke-dasharray="377" stroke-dashoffset="105" stroke-linecap="round"/>
+        </svg>
+        <div class="gauge-text">
+          <div class="gauge-num">11.4m</div>
+          <div class="gauge-label">MTTR الحالي</div>
+        </div>
+      </div>
+      <div class="gauge-info">
+        <p>ضمن حد الاتفاقية <b>15m</b> ✓</p>
+        <p>أسرع استجابة: <b>1.2m</b></p>
+        <p>أبطأ استجابة: <b>10m</b></p>
+        <p>عدد الحوادث المقاسة: <b>171</b></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MITRE ATT&CK MATRIX -->
+<section class="mitre-panel">
+  <div class="panel-head">
+    <span class="panel-title">تقنيات MITRE ATT&amp;CK المستخدمة</span>
+    <span class="panel-tag">TACTIC → TECHNIQUE HEATMAP</span>
+  </div>
+  <div class="mitre-grid" id="mitreGrid"></div>
+</section>
+
+<footer>SOC DASHBOARD — REAL-TIME ORGANIZATIONAL THREAT VISIBILITY -BUILT BY:Eng:DevSecOps:Nagi Alshaikh-All Rights Reserved © 2026 </footer>
+
+<script>
+/* ===== CLOCK ===== */
+function tickClock(){
+  const d = new Date();
+  document.getElementById('clock').textContent = d.toLocaleTimeString('en-GB');
+}
+setInterval(tickClock, 1000); tickClock();
+
+/* ===== ATTACK TYPES ===== */
+const attackTypes = [
+  {label:'Phishing', val:38, color:'var(--red)'},
+  {label:'Brute Force', val:27, color:'var(--amber)'},
+  {label:'Malware', val:19, color:'var(--cyan)'},
+  {label:'DDoS', val:9, color:'#9d6cff'},
+  {label:'Insider', val:7, color:'var(--green)'},
+];
+document.getElementById('attackTypes').innerHTML = attackTypes.map(a => `
+  <div class="bar-row">
+    <div class="bar-label">${a.label}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${a.val}%; background:${a.color}; box-shadow:0 0 8px ${a.color};"></div></div>
+    <div class="bar-val">${a.val}%</div>
+  </div>`).join('');
+
+/* ===== TOP TARGETED USERS ===== */
+const users = [
+  {name:'سارة ', dept:'Finance', count:47, init:'سا'},
+  {name: "محمد" , dept:'IT Admin', count:41, init:'مح'},
+  {name:' يوسف', dept:'HR', count:33, init:'يو'},
+  {name:' سند', dept:'Sales', count:28, init:'سن'},
+  {name:"نور", dept:'Executive', count:22, init:'نو'},
+]
+document.getElementById('topUsers').innerHTML = users.map((u,i)=>`
+  <div class="user-row">
+    <span class="user-rank">${String(i+1).padStart(2,'0')}</span>
+    <span class="user-avatar">${u.init}</span>
+    <div class="user-info">
+      <div class="user-name">${u.name}</div>
+      <div class="user-dept">${u.dept}</div>
+    </div>
+    <span class="user-count">${u.count}</span>
+  </div>`).join('');
+
+/* ===== ATTACK SOURCE GEO ===== */
+const geos = [
+  {name:'RO', count:412, angle:30, r:75},
+  {name:'CH', count:298, angle:110, r:55},
+  {name:'KS', count:171, angle:200, r:65},
+  {name:'BR', count:96, angle:260, r:45},
+  {name:'ER', count:64, angle:320, r:35},
+];
+const radar = document.getElementById('radar');
+geos.forEach(g=>{
+  const rad = g.angle * Math.PI/180;
+  const cx = 84 + g.r*Math.cos(rad) - 3.5;
+  const cy = 84 + g.r*Math.sin(rad) - 3.5;
+  const dot = document.createElement('div');
+  dot.className='radar-dot';
+  dot.style.left = cx+'px'; dot.style.top = cy+'px';
+  dot.style.animationDelay = (Math.random()*2)+'s';
+  radar.appendChild(dot);
+});
+document.getElementById('geoList').innerHTML = geos.map(g=>`
+  <div class="geo-row">
+    <span class="geo-name"><span class="geo-dot"></span>${g.name}</span>
+    <span class="geo-count">${g.count}</span>
+  </div>`).join('');
+
+/* ===== MITRE MATRIX ===== */
+const mitre = [
+  {tactic:'Initial Access', techs:[['Phishing',62],['Valid Accounts',18],['External Remote',9]]},
+  {tactic:'Execution', techs:[['PowerShell',44],['Scheduled Task',12],['User Execution',27]]},
+  {tactic:'Persistence', techs:[['Registry Run Keys',21],['New Service',8],['Account Manip.',15]]},
+  {tactic:'Priv. Escalation', techs:[['Token Manip.',6],['Exploit Vuln',11],['Sudo Abuse',3]]},
+  {tactic:'Defense Evasion', techs:[['Obfuscated Files',33],['Disable Logging',14],['Masquerading',19]]},
+  {tactic:'Credential Access', techs:[['Brute Force',52],['Credential Dump',17],['Keylogging',6]]},
+  {tactic:'Exfiltration', techs:[['C2 Channel',24],['Exfil over Web',9],['Auto Exfil',4]]},
+];
+function heatClass(v){
+  if(v>=40) return 'heat-4';
+  if(v>=20) return 'heat-3';
+  if(v>=10) return 'heat-2';
+  if(v>=1) return 'heat-1';
+  return 'heat-0';
+}
+document.getElementById('mitreGrid').innerHTML = mitre.map(col=>`
+  <div class="tactic-col">
+    <div class="tactic-head">${col.tactic}</div>
+    ${col.techs.map(t=>`<div class="cell ${heatClass(t[1])}" title="${t[0]} — ${t[1]} حادثة">${t[0]}<span class="cnt">${t[1]}</span></div>`).join('')}
+  </div>`).join('');
+
+/* ===== LIVE SIMULATION ===== */
+let alerts = 1284, critical = 37;
+setInterval(()=>{
+  alerts += Math.floor(Math.random()*4);
+  if(Math.random()>0.7) critical += (Math.random()>0.5?1:-1);
+  critical = Math.max(20, critical);
+  document.getElementById('kpiAlerts').textContent = alerts.toLocaleString('en-US');
+  document.getElementById('kpiCritical').textContent = critical;
+  const dot = document.getElementById('orgDot');
+  const txt = document.getElementById('orgStatusText');
+  if(critical > 35){
+    dot.className='status-dot crit';
+    txt.textContent='حالة المؤسسة: تحت المراقبة المشددة';
+  } else {
+    dot.className='status-dot';
+    txt.textContent='حالة المؤسسة: مستقرة';
+  }
+}, 3500);
+</script>
+
+</body>
+</html>
