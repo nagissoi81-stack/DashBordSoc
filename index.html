@@ -78,6 +78,11 @@ header::after{
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
 .clock{font-family:var(--mono); font-size:13px; color:var(--cyan); letter-spacing:1px; min-width:160px; text-align:left; direction:ltr;}
 .designer-credit{font-family:var(--mono); font-size:10px; color:var(--muted-dim); text-align:left; direction:ltr; line-height:1.4;}
+.demo-badge{
+  font-family:var(--mono); font-size:9.5px; font-weight:700; letter-spacing:1px;
+  color:var(--amber); border:1px solid var(--amber); background:var(--amber-dim);
+  padding:4px 10px; border-radius:20px; cursor:default; direction:ltr;
+}
 
 /* ===== KPI STRIP ===== */
 .kpi-grid{
@@ -220,6 +225,7 @@ footer{text-align:center; padding:18px 0 4px; font-family:var(--mono); font-size
       <span id="orgStatusText">حالة المؤسسة: تحت المراقبة المشددة</span>
     </div>
     <div class="clock" id="clock">--:--:--</div>
+    <div class="demo-badge" title="جميع البيانات المعروضة في هذه اللوحة بيانات تجريبية (Simulated) لأغراض العرض التقني فقط، ولا تعكس بيانات حقيقية لأي مؤسسة">DEMO DATA</div>
     <div class="designer-credit">تصميم وتطوير<br><b style="color:var(--cyan)">م. ناجي الشيخ</b></div>
   </div>
 </header>
@@ -239,21 +245,21 @@ footer{text-align:center; padding:18px 0 4px; font-family:var(--mono); font-size
   <div class="kpi k-amber">
     <div class="kpi-label">الأجهزة المصابة</div>
     <div class="kpi-value" id="kpiInfected">14</div>
-    <div class="kpi-sub">من أصل 612 جهاز</div>
+    <div class="kpi-sub" id="kpiInfectedSub">من أصل 612 جهاز</div>
   </div>
   <div class="kpi k-cyan">
     <div class="kpi-label">متوسط زمن الاستجابة</div>
-    <div class="kpi-value">11.4<span style="font-size:14px;color:var(--muted)">m</span></div>
-    <div class="kpi-sub trend-down">▼ تحسّن 2.1 دقيقة</div>
+    <div class="kpi-value"><span id="kpiMttr">11.4</span><span style="font-size:14px;color:var(--muted)">m</span></div>
+    <div class="kpi-sub trend-down" id="kpiMttrSub">▼ تحسّن 2.1 دقيقة</div>
   </div>
   <div class="kpi k-red">
     <div class="kpi-label">الحوادث المفتوحة</div>
-    <div class="kpi-value">19</div>
+    <div class="kpi-value" id="kpiOpenInc">19</div>
     <div class="kpi-sub">قيد المعالجة</div>
   </div>
   <div class="kpi k-green">
     <div class="kpi-label">الحوادث المغلقة</div>
-    <div class="kpi-value">152</div>
+    <div class="kpi-value" id="kpiClosedInc">152</div>
     <div class="kpi-sub">هذا الشهر</div>
   </div>
 </section>
@@ -302,13 +308,13 @@ footer{text-align:center; padding:18px 0 4px; font-family:var(--mono); font-size
       <span class="panel-tag">INCIDENTS</span>
     </div>
     <div class="incident-track">
-      <div class="incident-seg" style="width:79%; background:var(--green);"></div>
-      <div class="incident-seg" style="width:21%; background:var(--red);"></div>
+      <div class="incident-seg" id="incSegClosed" style="width:79%; background:var(--green);"></div>
+      <div class="incident-seg" id="incSegOpen" style="width:21%; background:var(--red);"></div>
     </div>
     <div class="incident-legend">
-      <div class="legend-item"><span class="legend-dot" style="background:var(--green)"></span> مغلقة — <span class="legend-num">152</span></div>
-      <div class="legend-item"><span class="legend-dot" style="background:var(--red)"></span> مفتوحة — <span class="legend-num">19</span></div>
-      <div class="legend-item"><span class="legend-dot" style="background:var(--cyan)"></span> إجمالي — <span class="legend-num">171</span></div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--green)"></span> مغلقة — <span class="legend-num" id="legClosed">152</span></div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--red)"></span> مفتوحة — <span class="legend-num" id="legOpen">19</span></div>
+      <div class="legend-item"><span class="legend-dot" style="background:var(--cyan)"></span> إجمالي — <span class="legend-num" id="legTotal">171</span></div>
     </div>
   </div>
 
@@ -321,11 +327,11 @@ footer{text-align:center; padding:18px 0 4px; font-family:var(--mono); font-size
       <div class="gauge">
         <svg width="140" height="140" viewBox="0 0 140 140">
           <circle cx="70" cy="70" r="60" fill="none" stroke="#1f2735" stroke-width="10"/>
-          <circle cx="70" cy="70" r="60" fill="none" stroke="#21e6d6" stroke-width="10"
+          <circle id="gaugeArc" cx="70" cy="70" r="60" fill="none" stroke="#21e6d6" stroke-width="10"
             stroke-dasharray="377" stroke-dashoffset="105" stroke-linecap="round"/>
         </svg>
         <div class="gauge-text">
-          <div class="gauge-num">11.4m</div>
+          <div class="gauge-num" id="gaugeNum">11.4m</div>
           <div class="gauge-label">MTTR الحالي</div>
         </div>
       </div>
@@ -348,7 +354,7 @@ footer{text-align:center; padding:18px 0 4px; font-family:var(--mono); font-size
   <div class="mitre-grid" id="mitreGrid"></div>
 </section>
 
-<footer>SOC DASHBOARD — REAL-TIME ORGANIZATIONAL THREAT VISIBILITY -BUILT BY:Eng:DevSecOps:Nagi Alshaikh-All Rights Reserved © 2026 </footer>
+<footer>SOC DASHBOARD — REAL-TIME ORGANIZATIONAL THREAT VISIBILITY -BUILT BY:Eng:DevSecOps:Nagi Alshaikh-All Rights Reserved © 2026 <br>جميع البيانات المعروضة تجريبية (Simulated Data) لأغراض العرض التقني فقط ولا تمثل بيانات حقيقية لأي جهة</footer>
 
 <script>
 /* ===== CLOCK ===== */
@@ -440,14 +446,30 @@ document.getElementById('mitreGrid').innerHTML = mitre.map(col=>`
     ${col.techs.map(t=>`<div class="cell ${heatClass(t[1])}" title="${t[0]} — ${t[1]} حادثة">${t[0]}<span class="cnt">${t[1]}</span></div>`).join('')}
   </div>`).join('');
 
-/* ===== LIVE SIMULATION ===== */
-let alerts = 1284, critical = 37;
-setInterval(()=>{
-  alerts += Math.floor(Math.random()*4);
-  if(Math.random()>0.7) critical += (Math.random()>0.5?1:-1);
-  critical = Math.max(20, critical);
+/* ===== LIVE SIMULATION (Demo Data Only) ===== */
+let alerts = 1284, critical = 37, infected = 14, mttr = 11.4, openInc = 19, closedInc = 152;
+
+function renderLive(){
   document.getElementById('kpiAlerts').textContent = alerts.toLocaleString('en-US');
   document.getElementById('kpiCritical').textContent = critical;
+  document.getElementById('kpiInfected').textContent = infected;
+  document.getElementById('kpiMttr').textContent = mttr.toFixed(1);
+  document.getElementById('kpiOpenInc').textContent = openInc;
+  document.getElementById('kpiClosedInc').textContent = closedInc;
+
+  const total = openInc + closedInc;
+  document.getElementById('legOpen').textContent = openInc;
+  document.getElementById('legClosed').textContent = closedInc;
+  document.getElementById('legTotal').textContent = total;
+  const openPct = (openInc/total*100).toFixed(0);
+  document.getElementById('incSegOpen').style.width = openPct+'%';
+  document.getElementById('incSegClosed').style.width = (100-openPct)+'%';
+
+  // gauge: full circumference 377, target ~15m => map mttr to dashoffset
+  const offset = Math.max(20, Math.min(340, mttr*9));
+  document.getElementById('gaugeArc').setAttribute('stroke-dashoffset', offset);
+  document.getElementById('gaugeNum').textContent = mttr.toFixed(1)+'m';
+
   const dot = document.getElementById('orgDot');
   const txt = document.getElementById('orgStatusText');
   if(critical > 35){
@@ -457,6 +479,26 @@ setInterval(()=>{
     dot.className='status-dot';
     txt.textContent='حالة المؤسسة: مستقرة';
   }
+}
+renderLive();
+
+setInterval(()=>{
+  alerts += Math.floor(Math.random()*4);
+  if(Math.random()>0.7) critical += (Math.random()>0.5?1:-1);
+  critical = Math.max(20, critical);
+
+  if(Math.random()>0.75) infected += (Math.random()>0.5?1:-1);
+  infected = Math.max(2, Math.min(40, infected));
+
+  mttr += (Math.random()-0.5)*0.6;
+  mttr = Math.max(3, Math.min(20, mttr));
+
+  if(Math.random()>0.6){
+    if(Math.random()>0.45){ openInc++; }
+    else if(openInc>3){ openInc--; closedInc++; }
+  }
+
+  renderLive();
 }, 3500);
 </script>
 
