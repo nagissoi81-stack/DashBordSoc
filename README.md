@@ -31,11 +31,6 @@
 
 ## 🚀 طريقة التشغيل محلياً
 
-git clone https://github.com/nagissoi81-stack/DashBordSoc.git
-cd DashBordSoc
-
-
-ثم افتح ملف `index.html` مباشرة في المتصفح، أو استخدم أي خادم محلي بسيط:
 <img width="932" height="427" alt="SOC2" src="https://github.com/user-attachments/assets/20904cd4-6a07-4e23-9bed-b59ee3e4af9c" />
 <img width="933" height="412" alt="SOC1" src="https://github.com/user-attachments/assets/403e8a0e-c5a2-42d9-8240-c1b09f02f293" />
 
